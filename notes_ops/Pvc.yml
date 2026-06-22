@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce   # only one Node can mount this for read/write at a time — fine, since we run a single Postgres Pod
+  resources:
+    requests:
+      storage: 2Gi
+  # storageClassName omitted on purpose -> uses your cluster's default StorageClass
+  # (e.g. "standard" on most managed clusters). Set it explicitly if your cluster
+  # has no default, e.g.: storageClassName: standard

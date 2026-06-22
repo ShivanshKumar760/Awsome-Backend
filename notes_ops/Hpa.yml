@@ -1,0 +1,38 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: instagram-api-hpa
+  labels:
+    app: instagram-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: instagram-api-deployment   # must match the Deployment name exactly
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60   # scale up once average CPU across pods exceeds 60% of its request
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 120   # wait 2 min of sustained low usage before scaling down
+                                          # — avoids flapping (scale up, down, up, down...)
+    scaleUp:
+      stabilizationWindowSeconds: 0      # scale up immediately when load spikes, no hesitation
+
+# NOTE: the HPA only targets the Flask API Deployment, never the Postgres
+# Deployment. Postgres is stateful and pinned to one PVC — autoscaling it
+# would try to spin up a second pod fighting over the same ReadWriteOnce
+# disk, which is exactly the failure mode the `Recreate` strategy and
+# replicas: 1 in deployment.yml are protecting against.

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: instagram-config
+  labels:
+    app: instagram-api
+data:
+  # Non-secret configuration — anything that's fine to see in plaintext.
+  # Pulled into containers as environment variables (see deployment.yml).
+  DB_HOST: "postgres-service"   # the Postgres Service name — Kubernetes DNS resolves this automatically
+  DB_PORT: "5432"
+  DB_NAME: "instagram_clone"
+  FLASK_ENV: "production"

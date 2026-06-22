@@ -1,0 +1,33 @@
+---
+# Internal-only Service — Postgres should NEVER be exposed outside the cluster.
+# Type defaults to ClusterIP, which is exactly what we want here.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service   # this exact name is what DB_HOST in the ConfigMap points to
+  labels:
+    app: postgres
+spec:
+  selector:
+    app: postgres            # routes traffic to any Pod with label app=postgres
+  ports:
+    - port: 5432              # port other Pods use to reach this Service
+      targetPort: 5432         # port the container actually listens on
+
+---
+# Exposes the Flask API. NodePort/LoadBalancer/Ingress are all reasonable choices
+# depending on your cluster — LoadBalancer shown here as the typical cloud-provider choice.
+# On a local cluster (minikube/kind) you'd usually use NodePort or `kubectl port-forward` instead.
+apiVersion: v1
+kind: Service
+metadata:
+  name: instagram-api-service
+  labels:
+    app: instagram-api
+spec:
+  type: LoadBalancer   # change to NodePort for local clusters, e.g. minikube
+  selector:
+    app: instagram-api
+  ports:
+    - port: 80           # port external clients hit
+      targetPort: 5000     # port the Flask/gunicorn container listens on
